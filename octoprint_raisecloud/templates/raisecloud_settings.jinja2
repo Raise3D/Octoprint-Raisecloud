@@ -1,0 +1,185 @@
+<script>
+  var raisecloud_variables = {
+    printer_name: "{{ plugin_raisecloud_printer_name|escape }}"
+  }
+</script>
+
+
+    <div class="container_fluid" id="bindPage" data-bind="visible: showBind()">
+      <div class="contain">
+        <div class="setting_row ">
+          <div class="span4 logo left">
+            <div class="logo_img">
+              <img src="/plugin/raisecloud/static/images/logo.png" />
+            </div>
+          </div>
+          <div class="top_right">
+            <div class="top_title">RaiseCloud Plugin</div>
+            <div class="top_tip">Hello RaiseCloud User!</div>
+            <div class="top_content">
+              This OctoPrint device will be linked to your RaiseCloud
+              Team.Any member on your RaiseCloud Team will have control of
+              this OctoPrint device. You can manage these permissions inside of
+              your RaiseCloud Team Settings
+            </div>
+          </div>
+        </div>
+        <div class=" setting_row main">
+          <div class="span12 ">
+            <div class="main_tip">
+              Please upload the binding key file to bind OctoPrint to your
+              RaiseCloud Team. Click <a href="http://alpha.raise3d.com/" target="_blank">here</a> to download the key file.
+            </div>
+          </div>
+        </div>
+        <div class=" setting_row">
+          <div class="span12">
+            <div class="btn_upload">
+              <button class="filea">
+                <div class="upload_img">
+                  <img src="/plugin/raisecloud/static/images/upload.png" alt="" />
+                </div>
+                Upload
+                <input
+                  type="file"
+                  id="fileUpload"
+                  data-bind="event:{change:uploadFile}"
+                />
+              </button>
+              <div data-bind="text:fileName" class="upload_fileName"></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="span12">
+            <div class="btn_bind">
+              <button
+                id="bindRaiseCloud"
+                data-bind="disable:disabled,click:bind"
+              >
+                Bind
+              </button>
+
+            </div>
+            <div class="privacy">
+              <input
+                type="checkbox"
+                value="option2"
+                data-bind="checked:checked"
+                name="sex"
+              />I have read and agree to the <span
+                class="privacy_policy"
+                data-bind="click:turnPrivacy"
+                >privacy policy</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="bindPageMsg" class="messages"></div>
+      <div id="privacy_model">
+        <div class="model_cancel" data-bind="click:privacyCancel">x</div>
+        <div class="model_content">
+          <div class="model_content_title">隐私权和条款</div>
+          <div class="model_contents">
+            <p>
+              隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外
+            </p>
+            <p>
+              隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外隐私权券地方撒而非合法而非等你速度会反复法是否会无法额外
+            </p>
+          </div>
+        </div>
+        <div class="model_btn">
+          <button class="btn_confirm " data-bind="click:privacyCancel">
+            关闭
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+
+    <div class="container_fluid" id="successPage" data-bind="visible: !showBind()">
+      <!-- data-bind="visible:!showBind" -->
+      <div class="contain success">
+        <div class=" row success_top">
+          <div class="span12 ">
+            <div class="success_img">
+              <img src="/plugin/raisecloud/static/images/success.png" />
+            </div>
+            <div class="success_title">
+              Printer Binded Successfully!
+            </div>
+          </div>
+        </div>
+        <div class=" setting_row success_main">
+          <div class="span12 ">
+            <div class="main_list">
+              <ul>
+                <li class="list_item">
+                  <div class="list_left left">
+                    Binding Account
+                  </div>
+                  <div class="list_right left" data-bind="text:userName,{title:userName}"></div>
+                  <div
+                    class="right list_bind"
+                    id="unbind"
+                    data-bind="click:unbind"
+                  >
+                    Unbind
+                  </div>
+                </li>
+                <li class="list_item">
+                  <div class="list_left left">
+                    Team
+                  </div>
+                  <div class="list_right left" data-bind="text:groupName,{title:groupName}"></div>
+                </li>
+                <li class="list_item">
+                  <div class="list_left left">
+                    Team Owner
+                  </div>
+                  <div class="list_right  left" data-bind="text:groupOwner,{title:groupOwner}"></div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class=" setting_row">
+          <div class="span12">
+            <div class="main_printer">
+              <div class="list_left left">
+                Printer Name
+              </div>
+              <div class="list_right left">
+                <div data-bind="text:printer_name,attr:{title:printer_name},visible:(!showInput())"></div>
+                <input
+                  type="text"
+                  class="input"
+                  data-bind="value:printer_name,visible:(showInput()),event:{blur:onPrintName}"
+                  maxlength="20"
+                />
+              </div>
+              <div data-bind="click:editPrintName" class="printer_img">
+                <img src="/plugin/raisecloud/static/images/edit.png" alt="" />
+              </div>
+            </div>
+            <div class="printer_waring">
+              If you want to change your printer's profile, open 'Printer
+              Profile' page in the tabber on the left side and go over the stops
+              on the webpage.
+            </div>
+          </div>
+        </div>
+        <div class=" setting_row">
+          <div class="span12">
+            <div class="btn_bind">
+              <button data-bind="click:turnRaise">RaiseCloud Website</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="successPageMsg" class="messages"></div>
+    </div>
+

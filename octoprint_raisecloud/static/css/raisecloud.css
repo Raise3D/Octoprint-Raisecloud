@@ -1,0 +1,377 @@
+#settings_plugin_raisecloud .container_fluid .contain .main_list .list_item {
+  list-style: none;
+}
+#settings_plugin_raisecloud .container_fluid .contain .main_list ul {
+  padding: 0;
+  margin: 0 0 10px 0;
+}
+#settings_plugin_raisecloud .container_fluid .left {
+  float: left;
+}
+#settings_plugin_raisecloud .container_fluid .right {
+  float: right;
+}
+#settings_plugin_raisecloud .container_fluid {
+  box-sizing: border-box;
+  position: relative;
+  height: 700px;
+
+  width: 700px; /*  padding:  10px;  */
+  padding: 0 20px 40px 20px;
+  box-sizing: border-box;
+  border: 1px solid #eeeeee;
+  border-radius: 5px; /*  background-color:  pink;  */
+  margin: 0 auto;
+}
+#settings_plugin_raisecloud .container_fluid .messages {
+  margin: auto;
+  width: auto;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 30px;
+  background-color: rgba(0, 0, 0, 0.6);
+  line-height: 30px;
+  color: #fff;
+  padding: 0 10px;
+  border-radius: 2px;
+  box-sizing: border-box;
+  display: none;
+  white-space: nowrap;
+}
+#settings_plugin_raisecloud .container_fluid .contain .setting_row {
+  margin-top: 20px;
+}
+#settings_plugin_raisecloud .container_fluid .contain .setting_row .logo {
+  width: 35%;
+}
+#settings_plugin_raisecloud .container_fluid .contain .setting_row .logo_img {
+  box-sizing: border-box;
+  height: 180px;
+  width: 180px;
+  vertical-align: middle;
+  padding: 30px 15px;
+  border: 2px solid rgb(168, 23, 39);
+  float: left;
+}
+#settings_plugin_raisecloud .container_fluid .contain .setting_row img {
+  width: 100%;
+}
+#settings_plugin_raisecloud .container_fluid .contain .setting_row .top_title {
+  font-size: 30px;
+}
+#settings_plugin_raisecloud .container_fluid .contain .setting_row .top_tip {
+  font-size: 20px;
+  margin-bottom: 20px;
+  margin-top: 10px;
+}
+#settings_plugin_raisecloud .container_fluid .contain .setting_row .main_tip {
+  margin: 40px 0;
+}
+
+#settings_plugin_raisecloud
+  .container_fluid
+  .contain
+  .setting_row
+  .top_content {
+  font-size: 16px;
+}
+#settings_plugin_raisecloud .container_fluid .contain .setting_row .main {
+  margin-top: 60px;
+}
+
+#settings_plugin_raisecloud
+  .container_fluid
+  .contain
+  .setting_row
+  .main
+  .main_tip {
+  font-size: 14px;
+}
+
+#settings_plugin_raisecloud
+  .container_fluid
+  .contain
+  .setting_row
+  .btn_upload
+  .filea {
+  position: relative;
+  width: 100%;
+  height: 50px;
+  line-height: 50px;
+  color: #0088cc;
+  display: inline-block;
+  background-color: transparent;
+  border: 1px solid #f2eff2;
+  text-align: center;
+  border-radius: 5px;
+}
+
+#settings_plugin_raisecloud
+  .container_fluid
+  .contain
+  .setting_row
+  .btn_upload
+  .filea
+  input {
+  position: absolute;
+  font-size: 0;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  right: 0;
+  opacity: 0;
+}
+
+#settings_plugin_raisecloud
+  .container_fluid
+  .contain
+  .setting_row
+  .btn_upload
+  .filea
+  .upload_img {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+}
+
+#settings_plugin_raisecloud
+  .container_fluid
+  .contain
+  .setting_row
+  .upload_fileName {
+  color: #0088cc;
+  height: 30px;
+  line-height: 30px;
+}
+#settings_plugin_raisecloud .container_fluid .btn_bind button {
+  font-size: 16px;
+  margin-left: 0px;
+  width: 100%;
+  border: none;
+  height: 50px;
+  border-radius: 5px;
+  margin-top: 20px;
+  color: #fff;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 125, 204, 1),
+    rgba(0, 83, 204, 1)
+  );
+}
+#settings_plugin_raisecloud input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 18px;
+  position: relative;
+  margin-top: -4px;
+  margin-right: 10px;
+}
+#settings_plugin_raisecloud input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  border-radius: 2px;
+  top: 0;
+  left: 0;
+  background: #fff;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #d9d9d9;
+}
+#settings_plugin_raisecloud input[type="checkbox"]:checked::before {
+  content: "\2713";
+  background-color: #fff;
+  position: absolute;
+  border-radius: 2px;
+  top: 0;
+  left: 0;
+  width: 100%;
+  border: 1px solid #2770bd;
+  color: #2770bd;
+  font-size: 12px;
+  font-weight: bold;
+}
+#settings_plugin_raisecloud .privacy {
+  margin-top: 10px;
+  font-size: 14px;
+}
+#settings_plugin_raisecloud .privacy .privacy_policy {
+  color: rgb(39, 112, 189);
+}
+#settings_plugin_raisecloud .container_fluid.background {
+  background-color: rgba(1, 1, 1, 0.2);
+}
+#settings_plugin_raisecloud #privacy_model {
+  position: absolute;
+  top: 20%;
+  left: 20%;
+  height: 400px;
+  border-radius: 8px;
+  width: 350px;
+  box-sizing: border-box;
+  padding: 15px;
+  display: none;
+  background-color: #fff;
+}
+#settings_plugin_raisecloud #privacy_model .model_cancel {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 16px;
+  color: #666;
+}
+#settings_plugin_raisecloud #privacy_model .model_content .model_content_title {
+  font-size: 18px;
+  height: 40px;
+}
+#settings_plugin_raisecloud #privacy_model .model_content .model_contents {
+  height: 280px;
+  overflow: auto;
+  font-size: 12px;
+}
+#settings_plugin_raisecloud #privacy_model .model_btn {
+  margin-top: 18px;
+  padding: 0 25px;
+  /* width: 100%; */
+  text-align: center;
+}
+#settings_plugin_raisecloud #privacy_model .model_btn button {
+  border: 1px solid #2770bd;
+  background-color: #2770bd;
+  color: #fff;
+  padding: 4px 15px;
+  border-radius: 5px;
+}
+
+/* --------------------success页面---------------- */
+#settings_plugin_raisecloud .container_fluid .success .success_top {
+  /* height: 400px; */
+  text-align: center;
+}
+
+#settings_plugin_raisecloud
+  .container_fluid
+  .success
+  .success_top
+  .success_img {
+  width: 80px;
+  height: 80px;
+  margin: 50px auto 15px;
+}
+
+#settings_plugin_raisecloud
+  .container_fluid
+  .success
+  .success_top
+  .success_img
+  img {
+  width: 100%;
+}
+
+#settings_plugin_raisecloud
+  .container_fluid
+  .success
+  .success_top
+  .success_title {
+  font-size: 28px;
+  line-height: 50px;
+  text-align: center;
+}
+
+#settings_plugin_raisecloud .container_fluid .success .success_main .main_list {
+  border: 1px solid #eee;
+  border-bottom: none;
+  border-radius: 5px;
+}
+#settings_plugin_raisecloud .container_fluid .success .main_list .list_item {
+  border-bottom: 1px solid #eee;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 20px;
+}
+#settings_plugin_raisecloud .container_fluid .success .list_item .list_left {
+  width: 50%;
+}
+#settings_plugin_raisecloud .container_fluid .success .list_bind {
+  color: #0088cc;
+}
+#settings_plugin_raisecloud .container_fluid .success .main_printer {
+  margin-top: 30px;
+  border: 1px solid #eee;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 20px;
+  border-radius: 5px;
+}
+#settings_plugin_raisecloud .container_fluid .success .input {
+  height: 30px;
+  line-height: 30px;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  padding-left: 5px;
+}
+#settings_plugin_raisecloud .container_fluid .success .main_printer .list_left {
+  width: 50%;
+}
+#settings_plugin_raisecloud .container_fluid .success .list_bind {
+  color: #0088cc;
+}
+#settings_plugin_raisecloud .container_fluid .success .main_printer {
+  margin-top: 30px;
+  border: 1px solid #eee;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 20px;
+  border-radius: 5px;
+}
+#settings_plugin_raisecloud .container_fluid .success .input {
+  height: 30px;
+  line-height: 30px;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  padding-left: 5px;
+}
+#settings_plugin_raisecloud .container_fluid .success .main_printer .list_left {
+  width: 50%;
+}
+#settings_plugin_raisecloud .container_fluid .success .printer_img {
+  float: right;
+  margin-right: 30px;
+  width: 20px;
+  height: 20px;
+}
+#settings_plugin_raisecloud .container_fluid .success .printer_img img {
+  width: 100%;
+}
+#settings_plugin_raisecloud .container_fluid .success .printer_waring {
+  box-sizing: border-box;
+  /* position: absolute; */
+  width: 100%;
+  height: 60px;
+  background-color: #fff3e0;
+  color: #999999;
+  padding: 10px 22px;
+}
+#settings_plugin_raisecloud .top_right {
+  float: left;
+  width: 60%;
+}
+
+#settings_plugin_raisecloud .container_fluid .success .list_item .list_right {
+  width: 250px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+#settings_plugin_raisecloud .container_fluid .success .main_printer .list_right {
+  width: 250px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
