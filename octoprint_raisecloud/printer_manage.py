@@ -356,11 +356,11 @@ class PrinterManager(object):
         load_status = self.load_and_start(download_url, filename)
         if load_status:
             websocket.send_text(success_data)
-            #_logger.info("send a print start message to cloud: {}".format(success_data))
+            _logger.info("start print file .")
         else:
             # 下载文件失败
             websocket.send_text(failed_data)
-            #_logger.info("send download remote file error message to cloud: {}".format(failed_data))
+            _logger.info("download remote file error .")
             self.task_id = "not_remote_tasks"
 
     def load_and_start(self, download_url, filename):
@@ -422,7 +422,7 @@ def download_zip_file(download_url, zip_url, unzip_url):
         _logger.info("retry download failed，status code {}".format(r.status_code))
         os.remove(compress_path)
         return False
-
+    _logger.info("download file success. ")
     try:
         tar = tarfile.open(compress_path, "r:gz")
         download_file_names = tar.getnames()

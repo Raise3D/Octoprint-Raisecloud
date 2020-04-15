@@ -135,7 +135,7 @@ class CloudTask(object):
                     "reboot": True}
             }
             self.websocket.send_text(reboot_data)
-            #_logger.info("send reboot message to cloud {}".format(reboot_data))
+            _logger.info("reboot remote raisecloud.")
             return
 
         if state == 1:
@@ -148,7 +148,7 @@ class CloudTask(object):
                     "print_progress": "100.00"}
             }
             self.websocket.send_text(process_data)
-            #_logger.info("send complete process to cloud {}".format(process_data))
+            _logger.info("remote task printing process completed.")
         if self.printer_manager.task_id == "not_remote_tasks":
             return
         result = {
@@ -162,7 +162,7 @@ class CloudTask(object):
                 "machine_id": self._get_machine_id()["machine_id"],
             }
         }
-        #_logger.info("send complete message to cloud {}".format(result))
+        _logger.info("remote task printing completed")
         self.websocket.send_text(result)
         # clean up task_id
         self.printer_manager.task_id = "not_remote_tasks"
@@ -217,10 +217,10 @@ class CloudTask(object):
                     time.sleep(5)
                     index += 1
                 else:
-                    #_logger.info("send heartbeat event to exit ...")
+                    _logger.info("raisecloud heartbeat over.")
                     break
                 if index % 60 == 0:
-                    #_logger.info("send ping message to cloud: ping")
+                    _logger.info("ping to raisecloud.")
                     self.websocket.send_text(data="ping", ping=True)
             except Exception as e:
                 _logger.error("socket printer ping error ...")
@@ -233,7 +233,7 @@ class CloudTask(object):
         while True:
             try:
                 if not self.websocket.connected():
-                    #_logger.info("send printer event to exit ...")
+                    _logger.info("raisecloud printer info over.")
                     break
                 send_data = self._get_send_data()
                 tmp_data = send_data["data"]
@@ -253,12 +253,12 @@ class CloudTask(object):
                         # 防止网络异常丢失当前状态
                         if "cur_print_state" not in send_data["data"].keys():
                             send_data["data"]["cur_print_state"] = tmp_data["cur_print_state"]
-                        #_logger.info("send printer info message to cloud: {}".format(send_data))
+                        #_logger.info("update printer info to raisecloud.")
                         self._send_ws_data(send_data)
                         diff_dict = {}
 
                 else:
-                    #_logger.info("send printer info message to cloud: {}".format(send_data))
+                    # _logger.info("update printer info to raisecloud.")
                     self._send_ws_data(send_data)
                 previous_dict = tmp_data
                 time.sleep(5)
@@ -305,7 +305,7 @@ class CloudTask(object):
 
     def _on_server_ws_msg(self, ws, message):
         # 处理远程消息
-        #_logger.info("receive message from raisecloud: %s" % message)
+        # _logger.info("receive message from raisecloud: %s" % message)
         mes = json.loads(message)
         if mes["message_type"] == 2:
             try:
@@ -337,7 +337,7 @@ class CloudTask(object):
                         "machine_id": self._get_machine_id()["machine_id"]
                     }
                 }
-                #_logger.info("send {} message to cloud: {}".format(command, result))
+                _logger.info("printer pause or resume or stop done.")
                 self.websocket.send_text(result)
             except Exception as e:
                 _logger.error("printer setting push down error ...")
@@ -406,7 +406,7 @@ class CloudTask(object):
                         "machine_id": self._get_machine_id()["machine_id"],
                     }
                 }
-                #_logger.info("send printer setting message to cloud: {}".format(result))
+                _logger.info("printer setting parameters done.")
                 self.websocket.send_text(result)
             except Exception as e:
                 _logger.error("printer setting error,")
@@ -429,7 +429,7 @@ class CloudTask(object):
                     "token": self._get_token()["token"],
                     "data": file_data
                 }
-                #_logger.info("send file data message to cloud: {}".format(result))
+                _logger.info("synchronization file message to remote.")
                 self.websocket.send_text(result)
             except Exception as e:
                 _logger.error("get file data error ...")
@@ -451,7 +451,7 @@ class CloudTask(object):
                             "machine_id": self._get_machine_id()["machine_id"]
                         }
                     }
-                    #_logger.info("send print local file message to the cloud: {}".format(result))
+                    _logger.info("printing local files remotely .")
                     self.websocket.send_text(result)
 
                 except Exception as e:
@@ -473,7 +473,7 @@ class CloudTask(object):
                     }
                 }
 
-                #_logger.info("send accept job message to cloud: {}".format(reply_message))
+                _logger.info("set up remote task acceptance .")
                 self.websocket.send_text(reply_message)
 
             except Exception as e:
@@ -491,11 +491,12 @@ class CloudTask(object):
                     # 强制下线
                     self.plugin.status = "logout"
                     self.sqlite_server.delete_content()
-                    _logger.info("user logout ...")
+                    _logger.info("remotely force users to go offline .")
                     self.plugin._logout()
 
                 if error_code == 2:
                     # 刷新token
+                    _logger.info("remotely force users to flash token .")
                     token = flash_token(machine_id=self._get_machine_id()["machine_id"])
                     # 写入token
                     if token:

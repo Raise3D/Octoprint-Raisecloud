@@ -123,7 +123,6 @@ class RaisecloudPlugin(octoprint.plugin.StartupPlugin,
     def _ws_alive(self):
         if hasattr(self.main_thread, 'isAlive'):
             status = self.main_thread.isAlive()
-            #self._logger.info("Websocket isAlive : (%s)" % status)
             return status
         return False
 
@@ -219,10 +218,10 @@ class RaisecloudPlugin(octoprint.plugin.StartupPlugin,
                 displayName="RaiseCloud",
                 displayVersion=self._plugin_version,
                 type="github_release",
-                user="Reachy",
+                user="Raise3D",
                 repo="Octoprint-Raisecloud",
                 current=self._plugin_version,
-                pip="https://github.com/ReachY/Octoprint-Raisecloud/archive/{target_version}.zip"
+                pip="https://github.com/Raise3D/Octoprint-Raisecloud/archive/{target_version}.zip"
             )
         )
 
