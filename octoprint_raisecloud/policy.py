@@ -5,7 +5,7 @@ import time
 class ReconnectionPolicy(object):
 
     def __init__(self):
-        self.policy = [2, 2, 4, 10, 20, 30, 60, 120, 240, 480, 3600]
+        self.policy = [2, 2, 4, 10, 20, 30, 60, 120]
         self.retry = -1
 
     def reset(self):
@@ -13,7 +13,8 @@ class ReconnectionPolicy(object):
 
     def more(self):
         self.retry += 1
-        delay = self.policy[self.retry]
         if self.retry > len(self.policy) - 1:
-            delay = len(self.policy) - 1
+            delay = self.policy[-1]
+        else:
+            delay = self.policy[self.retry]
         time.sleep(delay)

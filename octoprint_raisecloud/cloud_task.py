@@ -180,7 +180,7 @@ class CloudTask(object):
         while True:
             _logger.info("websocket connecting ...")
             try:
-                self.websocket = WebsocketServer(url="wss://api.raise3d.com/octo-v1.1/websocket",
+                self.websocket = WebsocketServer(url="wss://api.raise3d.com/octoprod-v1.1/websocket",
                                                  on_server_ws_msg=self._on_server_ws_msg,
                                                  on_client_ws_msg=self._on_client_ws_msg)
                 wst = threading.Thread(target=self.websocket.run)
@@ -517,12 +517,13 @@ def flash_token(machine_id):
     sign, timestamp = get_sign(machine_id)
     body = {"machine_id": machine_id, "timestamp": timestamp, "sign": sign}
     headers = {"content-type": "application/json"}
-    url = "https://api.raise3d.com/octo-v1.1/user/getToken"
+    url = "https://api.raise3d.com/octoprod-v1.1/user/getToken"
     result = requests.post(url=url, data=json.dumps(body), headers=headers)
     if result.status_code == 200:
         content = json.loads(result.content)
         token = content["data"]["token"]
         return token
+    _logger.error("get new token error.")
     return None
 
 

@@ -13,7 +13,7 @@ _logger = logging.getLogger('octoprint.plugins.raisecloud')
 class RaiseCloud(object):
 
     def __init__(self):
-        self.endpoint = "https://api.raise3d.com/octo-v1.1"
+        self.endpoint = "https://api.raise3d.com/octoprod-v1.1"
         self.url = "/user/keyLogin"
         self.machine_id = self.get_machine_id()
         self.machine_type = "other"

@@ -97,7 +97,7 @@ class Webcam(object):
         pic = self.get_snapshot()
         if not pic:
             return False
-        url = "https://api.raise3d.com/octo-v1.1/machine/uploadImage"
+        url = "https://api.raise3d.com/octoprod-v1.1/machine/uploadImage"
         data = MultipartEncoder({'file': ('snapshot.jpg', pic), 'machine_id': machine_id})
         headers = {"Content-Type": data.content_type, "Authorization": token}
         try:
