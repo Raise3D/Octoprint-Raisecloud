@@ -404,6 +404,14 @@ class PrinterManager(object):
         _logger.info("clean file %s success ..., " % clean_file)
 
 
+def timestamp_2_str(timestamp):
+    try:
+        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))
+    except Exception as e:
+        _logger.info("timestamp to strtime error.")
+        return ""
+
+
 def download_zip_file(download_url, zip_url, unzip_url):
     if not os.path.exists(unzip_url):
         os.makedirs(unzip_url)
@@ -412,16 +420,9 @@ def download_zip_file(download_url, zip_url, unzip_url):
     compress_path = os.path.join(zip_url, 'tmp.tar.gz')
     gcode_name = ""
 
-    try:
-        r = requests.get(download_url, stream=True, timeout=(10.0, 60.0))
-        if r.status_code == 200:
-            with open(compress_path, "wb") as compress_file:
-                for chunk in r.iter_content(chunk_size=100000):  # 100kb
-                    compress_file.write(chunk)
-    except:
-        _logger.info("retry download failed，status code {}".format(r.status_code))
-        os.remove(compress_path)
-        return False
+    status = retry_download(3, download_url, compress_path)
+    if not status:
+        return status
     _logger.info("download file success. ")
     try:
         tar = tarfile.open(compress_path, "r:gz")
@@ -443,9 +444,25 @@ def download_zip_file(download_url, zip_url, unzip_url):
         os.remove(compress_path)
 
 
-def timestamp_2_str(timestamp):
+def retry_download(retry_times, download_url, compress_path):
+    status = False
+    while retry_times > 0:
+        status = retry(download_url, compress_path)
+        if status:
+            break
+        retry_times -= 1
+    return status
+
+
+def retry(download_url, compress_path):
     try:
-        return time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(timestamp))
+        r = requests.get(download_url, stream=True, timeout=(10.0, 60.0))
+        if r.status_code == 200:
+            with open(compress_path, "wb") as compress_file:
+                for chunk in r.iter_content(chunk_size=100000):  # 100kb
+                    compress_file.write(chunk)
+        return True
     except Exception as e:
-        _logger.info("timestamp to strtime error.")
-        return ""
+        _logger.info("retry download，status code {}, error: {}".format(r.status_code, e))
+        os.remove(compress_path)
+        return False
