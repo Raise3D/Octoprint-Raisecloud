@@ -33,7 +33,7 @@ class Webcam(object):
         self.sleep_times = 0
         self.plugin = plugin
         self.settings = plugin._settings
-        self.cam_status = False
+        self.cam_status = True
         self.snapshot_url = self.settings.global_get(["webcam", "snapshot"])
         self.camera_url = self.settings.global_get(["webcam", "stream"])
         self.image_transpose = (self.settings.global_get(["webcam", "flipH"]) or
@@ -46,7 +46,8 @@ class Webcam(object):
                 result = requests.get(self.snapshot_url)
                 if result.status_code == 200:
                     self.cam_status = True
-                self.cam_status = False
+                else:
+                    self.cam_status = False
             except Exception as e:
                 self.cam_status = False
                 _logger.error("Error getting camera status: %s" % e)
@@ -109,9 +110,9 @@ class Webcam(object):
         except requests.exceptions.RequestException:
             status = 500
         if status == 200:
-            _logger.info("send snapshot message to cloud success .")
+            _logger.info("update snapshot to remote.")
         else:
-            _logger.info("send snapshot message to cloud error .")
+            _logger.info("update snapshot to remote error.")
 
     def upload_snapshot(self, machine_id, token):
         if self.cam_status or self.sleep_times % 10 == 0:

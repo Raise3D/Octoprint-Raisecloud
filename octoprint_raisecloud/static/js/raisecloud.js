@@ -15,7 +15,7 @@ $(function() {
     self.checked = ko.observable(false);
 
     self.turnRaise = function() {
-      window.open("http://alpha.raise3d.com/raise3d.html");
+      window.open("http://cloud.raise3d.com/raise3d.html");
     };
     // 弹框显示
     self.turnPrivacy = function() {
@@ -34,20 +34,13 @@ $(function() {
       let extName = fileName
         .substr(fileName.lastIndexOf(".") + 1)
         .toLowerCase();
-      if (extName != "raisepem") {
+      if (extName != "raisepem" || fileSize > 2 * 1024) {
         $("#bindPageMsg")
-          .text("Please choose key file")
-          .show(200)
-          .delay(3000)
-          .hide(500);
-        self.fileName("");
-        $("#fileUpload").val("");
-      } else if (fileSize > 2 * 1024) {
-        $("#bindPageMsg")
-          .text("The upload key files must not be larger than 2kb")
-          .show(200)
-          .delay(3000)
-          .hide(500);
+          new PNotify({
+            title: gettext("RaiseCloud printer binding key error"),
+            text: gettext("Please upload the correct RaiseCloud printer binding key."),
+            type: "error"
+            });
         self.fileName("");
         $("#fileUpload").val("");
       } else {
@@ -60,21 +53,21 @@ $(function() {
     self.bind = function() {
       if (!self.checked()) {
         $("#bindPageMsg")
-          .text("Please agree to privacy policy and service agreement")
-          .show(200)
-          .delay(3000)
-          .hide(500);
+          new PNotify({
+          title: gettext("RaiseCloud login warning"),
+          text: gettext("Please agree to privacy policy and service agreement."),
+          type: "warning"
+          });
       } else if (!self.fileName()) {
         $("#bindPageMsg")
-          .text("Please choose key file")
-          .show(200)
-          .delay(3000)
-          .hide(500);
+          new PNotify({
+          title: gettext("RaiseCloud login warning"),
+          text: gettext("Please select RaiseCloud printer binding key."),
+          type: "warning"
+          });
       } else {
         var fileObj = document.getElementById("fileUpload").files[0];
-
         var formData = new FormData();
-        console.log("file bind");
         formData.append("file", fileObj);
         $.ajax({
           type: "POST",
@@ -86,12 +79,12 @@ $(function() {
           success: function(data) {
             if (data.status == "failed") {
               self.disabled(false);
-              window.alert("failed");
               $("#bindPageMsg")
-                .text("bind error")
-                .show(200)
-                .delay(3000)
-                .hide(500);
+                new PNotify({
+                  title: gettext("RaiseCloud login failed"),
+                  text: gettext("Please check if your file is correct."),
+                  type: "error"
+                  });
             } else {
               self.showBind(false);
               self.checked(false);
@@ -102,19 +95,21 @@ $(function() {
               self.groupOwner(data.group_owner);
               self.printer_name(data.printer_name)
               $("#bindPageMsg")
-                .text("bind successfully")
-                .show(200)
-                .delay(3000)
-                .hide(500);
+                new PNotify({
+                  title: gettext("RaiseCloud Login successful"),
+                  text: gettext("You are now logged to RaiseCloud as" + self.userName()),
+                  type: "success"
+                  });
             }
           },
           error: function(error) {
             self.disabled(false);
             $("#bindPageMsg")
-              .text("bind error")
-              .show(200)
-              .delay(3000)
-              .hide(500);
+              new PNotify({
+                  title: gettext("RaiseCloud login failed"),
+                  text: gettext("There was an error with your account, Please check if your file is correct."),
+                  type: "error"
+                  });
           }
         });
       }
@@ -131,9 +126,7 @@ $(function() {
         dataType: "json",
         success: function(data) {
           if (data.status == "logout") {
-            console.log("user logout");
             self.showBind(true);
-            console.log(self.showBind());
           } else {
             console.log("user login");
             self.showBind(false);
@@ -141,7 +134,6 @@ $(function() {
             self.groupName(data.group_name);
             self.groupOwner(data.group_owner);
             self.printer_name(data.printer_name);
-            console.log(self.showBind());
           }
         },
         error: function(error) {}
@@ -151,10 +143,11 @@ $(function() {
     self.onPrintName = function() {
       if (!$(".input").val()) {
         $("#successPageMsg")
-          .text("Value cannot be empty")
-          .show(200)
-          .delay(3000)
-          .hide(500);
+          new PNotify({
+            title: gettext("Change printer name warning"),
+            text: gettext("Printer name cannot be empty."),
+            type: "warning"
+            });
       } else {
         $.ajax({
           type: "POST",
@@ -166,27 +159,30 @@ $(function() {
           dataType: "json",
           success: function(data) {
             if (data.status == "failed") {
-              console.log("modify printer name ...");
-              console.log(self.printer_name());
               self.showInput(true);
               $("#successPageMsg")
-                .text(data.msg)
-                .show(200)
-                .delay(3000)
-                .hide(500);
+                new PNotify({
+                  title: gettext("Change printer name failed"),
+                  text: gettext("Please change the printer name or try again."),
+                  type: "error"
+                  });
             } else {
-              console.log("modify printer name ...");
-              console.log(self.printer_name());
               self.showInput(false);
               self.printer_name($(".input").val());
+              new PNotify({
+                  title: gettext("Change printer name successful"),
+                  text: gettext("Printer name updated successfully in the RaiseCloud."),
+                  type: "success"
+                  });
             }
           },
           error: function(error) {
             $("#successPageMsg")
-              .text("error")
-              .show(200)
-              .delay(3000)
-              .hide(500);
+              new PNotify({
+                  title: gettext("Change printer name failed"),
+                  text: gettext("Please change the printer name or try again."),
+                  type: "error"
+                  });
           }
         });
       }
@@ -208,25 +204,31 @@ $(function() {
             self.fileName("");
             $("#fileUpload").val("");
             self.showBind(true);
-            console.log(self.showBind());
+            new PNotify({
+              title: gettext("RaiseCloud Logout successful"),
+              text: gettext("You are now logged out of RaiseCloud."),
+              type: "success"
+              });
 
           } else {
             self.showBind(false);
             console.log(self.showBind());
             $("#successPageMsg")
-              .text("Unbind error")
-              .show(200)
-              .delay(3000)
-              .hide(500);
+            new PNotify({
+              title: gettext("RaiseCloud Logout failed"),
+              text: gettext("There was an error logging out of RaiseCloud."),
+              type: "error"
+              });
           }
         },
         error: function(error) {
           console.log(self.showBind());
           $("#successPageMsg")
-            .text("Unbind error")
-            .show(200)
-            .delay(3000)
-            .hide(500);
+          new PNotify({
+            title: gettext("RaiseCloud Logout failed"),
+            text: gettext("There was an error logging out of RaiseCloud."),
+            type: "error"
+            });
         }
       });
     };
