@@ -34,16 +34,18 @@ class Webcam(object):
         self.plugin = plugin
         self.settings = plugin._settings
         self.cam_status = True
-        self.snapshot_url = self.settings.global_get(["webcam", "snapshot"])
-        self.camera_url = self.settings.global_get(["webcam", "stream"])
+        # self.snapshot_url = self.settings.global_get(["webcam", "snapshot"])
+        # self.camera_url = self.settings.global_get(["webcam", "stream"])
         self.image_transpose = (self.settings.global_get(["webcam", "flipH"]) or
                                  self.settings.global_get(["webcam", "flipV"]) or
                                  self.settings.global_get(["webcam", "rotate90"]))
 
     def check_cam_status(self):
-        if self.snapshot_url and self.camera_url:
+        snapshot_url = self.settings.global_get(["webcam", "snapshot"])
+        camera_url = self.settings.global_get(["webcam", "stream"])
+        if snapshot_url and camera_url:
             try:
-                result = requests.get(self.snapshot_url)
+                result = requests.get(snapshot_url)
                 if result.status_code == 200:
                     self.cam_status = True
                 else:
@@ -58,7 +60,8 @@ class Webcam(object):
                 return None
             else:
                 try:
-                    with closing(requests.get(self.snapshot_url)) as res:
+                    snapshot_url = self.settings.global_get(["webcam", "snapshot"])
+                    with closing(requests.get(snapshot_url)) as res:
                         pic = res.content
                     # result = requests.get(self.snapshot_url)
                     # pic = result.content
