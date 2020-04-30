@@ -7,13 +7,13 @@ websocket.enableTrace(False)
 
 class WebsocketServer(object):
 
-    def __init__(self, url, on_server_ws_msg, on_client_ws_msg):
+    def __init__(self, url, on_server_ws_msg):
 
         def on_message(ws, message):
             on_server_ws_msg(ws, message)
 
-        def on_open(ws):
-            on_client_ws_msg(ws)
+        # def on_open(ws):
+        #     on_client_ws_msg(ws)
 
         def on_error(ws, error):
             _logger.error("websocket server error ...")
@@ -23,7 +23,6 @@ class WebsocketServer(object):
 
         self.ws = websocket.WebSocketApp(url=url,
                                          on_message=on_message,
-                                         on_open=on_open,
                                          on_close=on_close,
                                          on_error=on_error)
 

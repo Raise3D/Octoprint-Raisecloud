@@ -1,6 +1,5 @@
 # coding=utf-8
 import json
-import uuid
 import base64
 import logging
 import requests
@@ -12,27 +11,18 @@ _logger = logging.getLogger('octoprint.plugins.raisecloud')
 
 class RaiseCloud(object):
 
-    def __init__(self):
+    def __init__(self, machine_id, printer_name):
         self.endpoint = "https://api.raise3d.com/octoprod-v1.1"
         self.url = "/user/keyLogin"
-        self.machine_id = self.get_machine_id()
+        self.machine_id = machine_id
         self.machine_type = "other"
-
-    @staticmethod
-    def get_machine_id():
-        mac = uuid.UUID(int=uuid.getnode()).hex[-12:]
-        mac_add = ":".join([mac[e:e + 2] for e in range(0, 11, 2)])
-        tmp = []
-        for i in mac_add.split(':'):
-            tmp.append(i)
-        new_tmp = "%s%s%s%s%s%s" % tuple(tmp)
-        machine_id = int(new_tmp, 16)
-        return machine_id
+        self.machine_name = printer_name
 
     def login_cloud(self, content):
         body = {
             "machine_id": str(self.machine_id),
             "machine_type": self.machine_type,
+            "machine_name": self.machine_name,
             "key": content
         }
         url = "{}{}".format(self.endpoint, self.url)

@@ -1,6 +1,7 @@
 # coding=utf-8
 from __future__ import absolute_import
 import time
+import uuid
 import socket
 import logging
 import threading
@@ -37,15 +38,18 @@ class RaisecloudPlugin(octoprint.plugin.StartupPlugin,
 
     def get_settings_defaults(self):
         printer_name = socket.gethostname()
+        machine_id = False
 
         return dict(
             printer_name=printer_name,
+            machine_id=machine_id
         )
 
     def get_template_vars(self):
 
         return dict(
-            printer_name=self._settings.get(["printer_name"])
+            printer_name=self._settings.get(["printer_name"]),
+            machine_id=self._settings.get(["machine_id"])
         )
 
     def get_template_configs(self):
@@ -59,10 +63,24 @@ class RaisecloudPlugin(octoprint.plugin.StartupPlugin,
             css=["css/raisecloud.css"]
         )
 
+    def get_machine_id(self):
+        mac = uuid.UUID(int=uuid.getnode()).hex[-12:]
+        mac_add = ":".join([mac[e:e + 2] for e in range(0, 11, 2)])
+        tmp = []
+        for i in mac_add.split(':'):
+            tmp.append(i)
+        new_tmp = "%s%s%s%s%s%s" % tuple(tmp)
+        machine_id = int(new_tmp, 16)
+        return machine_id
+
     def on_after_startup(self):
         if self._settings.get(["printer_name"]) == socket.gethostname():
             profile = self._printer_profile_manager.get_current_or_default()
             self._settings.set(['printer_name'], profile["name"] + "-" + profile["model"])
+            self._settings.save()
+        # 保存设备id
+        if not self._settings.get(["machine_id"]):
+            self._settings.set(['machine_id'], self.get_machine_id())
             self._settings.save()
         self.sqlite_server = SqliteServer(self)
         self.sqlite_server.init_db()
@@ -74,6 +92,7 @@ class RaisecloudPlugin(octoprint.plugin.StartupPlugin,
             if result["status"] == "success":
                 self.status = "login"
                 self._logger.info("user: %s login success ..." % user_name)
+                self.send_event("Login")
 
     def on_event(self, event, payload):
         if not hasattr(self, 'cloud_task'):
@@ -127,7 +146,7 @@ class RaisecloudPlugin(octoprint.plugin.StartupPlugin,
         return False
 
     def _login(self, user_name, content):
-        rc = RaiseCloud()
+        rc = RaiseCloud(str(self._settings.get(["machine_id"])), self._settings.get(["printer_name"]))
         data = rc.login_cloud(content)
         if data["state"] == 1:
             # 更新信息

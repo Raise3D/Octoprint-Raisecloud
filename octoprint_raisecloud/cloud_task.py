@@ -24,6 +24,8 @@ class CloudTask(object):
         self.printer_info = PrinterInfo(plugin)
         self.printer_manager = printer_manager_instance(plugin)
         self.sqlite_server = SqliteServer(plugin)
+        self.diff_dict = dict()
+        self.previous_dict = dict()
 
     def _send_ws_data(self, data, message_type=None):
         if not self.websocket:
@@ -56,9 +58,10 @@ class CloudTask(object):
         :return: {}
         "machine_id": machine_id,
         """
-        fetchone_sql = 'SELECT machine_id FROM profile WHERE ID = ? '
-        res = self.sqlite_server.fetchone(fetchone_sql, 1)
-        return {"machine_id": res[0]} if res else {}
+        # fetchone_sql = 'SELECT machine_id FROM profile WHERE ID = ? '
+        # res = self.sqlite_server.fetchone(fetchone_sql, 1)
+        # return {"machine_id": res[0]} if res else {}
+        return {"machine_id": str(self.plugin._settings.get(["machine_id"]))}
 
     def _set_receive_job(self, status):
         """
@@ -175,14 +178,14 @@ class CloudTask(object):
             _logger.error(e)
 
     def event_loop(self):
+        last_heartbeat = 0
         policy = ReconnectionPolicy()
-        disconnect_status = False
+
         while True:
             _logger.info("websocket connecting ...")
             try:
                 self.websocket = WebsocketServer(url="wss://api.raise3d.com/octoprod-v1.1/websocket",
-                                                 on_server_ws_msg=self._on_server_ws_msg,
-                                                 on_client_ws_msg=self._on_client_ws_msg)
+                                                 on_server_ws_msg=self._on_server_ws_msg)
                 wst = threading.Thread(target=self.websocket.run)
                 wst.daemon = True
                 wst.start()
@@ -191,90 +194,69 @@ class CloudTask(object):
                 while self.websocket.connected():
                     status = self.sqlite_server.check_login_status()
                     if status == "logout":
-                        _logger.info("user has logged out, websocket is about to disconnect ...")
-                        disconnect_status = True
-                        self.websocket.disconnect()
-                        wst.join()
+                        _logger.info("user has logged out, raisecloud ws is about to disconnect ...")
                         break
+
+                    if time.time() - last_heartbeat > 60:
+                        self.send_heartbeat()
+                        last_heartbeat = time.time()
+
+                    self.send_printer_info()
+
                     policy.reset()
                     time.sleep(5)
             finally:
                 try:
                     self.websocket.disconnect()
+                    _logger.info("come into finally , current ws status: {}".format(self.websocket.connected()))
                     if self.sqlite_server.check_login_status() == "logout":
                         break
                 except:
                     pass
+
+                self.diff_dict = dict()
+                self.previous_dict = dict()
                 policy.more()
-            # if disconnect_status:
-            #     break
 
-    def _send_heart_beat_event(self):
-        index = 0
-        while True:
-            try:
-                if self.websocket.connected():
-                    time.sleep(5)
-                    index += 1
-                else:
-                    _logger.info("raisecloud heartbeat over.")
-                    break
-                if index % 60 == 0:
-                    _logger.info("ping to raisecloud.")
-                    self.websocket.send_text(data="ping", ping=True)
-            except Exception as e:
-                _logger.error("socket printer ping error ...")
-                _logger.error(e)
-                time.sleep(5)
-
-    def _send_printer_info_event(self):
-        diff_dict = dict()
-        previous_dict = dict()
-        while True:
-            try:
-                if not self.websocket.connected():
-                    _logger.info("raisecloud printer info over.")
-                    break
-                send_data = self._get_send_data()
-                tmp_data = send_data["data"]
-                if previous_dict:
-                    for key, value in send_data["data"].items():
-                        if key == "storage_avl_kb" and abs(previous_dict[key] - value) < 1024:
-                            continue  # 变化小于1M
-                        # profile 更改配置，增加属性nozzle等
-                        if key not in previous_dict:
-                            diff_dict[key] = value
-                            continue
-                        if previous_dict[key] != value:
-                            diff_dict[key] = value
-                    if diff_dict:
-                        send_data["data"] = diff_dict
-                        send_data["data"].update({"machine_id": self._get_machine_id()["machine_id"]})
-                        # 防止网络异常丢失当前状态
-                        if "cur_print_state" not in send_data["data"].keys():
-                            send_data["data"]["cur_print_state"] = tmp_data["cur_print_state"]
-                        #_logger.info("update printer info to raisecloud.")
-                        self._send_ws_data(send_data)
-                        diff_dict = {}
-
-                else:
-                    # _logger.info("update printer info to raisecloud.")
+    def send_printer_info(self):
+        try:
+            send_data = self._get_send_data()
+            tmp_data = send_data["data"]
+            if self.previous_dict:
+                for key, value in send_data["data"].items():
+                    if key == "storage_avl_kb" and abs(self.previous_dict[key] - value) < 1024:
+                        continue  # 变化小于1M
+                    # profile 更改配置，增加属性nozzle等
+                    if key not in self.previous_dict:
+                        self.diff_dict[key] = value
+                        continue
+                    if self.previous_dict[key] != value:
+                        self.diff_dict[key] = value
+                if self.diff_dict:
+                    send_data["data"] = self.diff_dict
+                    send_data["data"].update({"machine_id": self._get_machine_id()["machine_id"]})
+                    # 防止网络异常丢失当前状态
+                    if "cur_print_state" not in send_data["data"].keys():
+                        send_data["data"]["cur_print_state"] = tmp_data["cur_print_state"]
                     self._send_ws_data(send_data)
-                previous_dict = tmp_data
-                time.sleep(5)
-            except Exception as e:
-                _logger.error("socket printer info error ...")
-                _logger.error(e)
-                time.sleep(5)
+                    # _logger.info("current printer info message: {}".format(send_data))
+                    self.diff_dict = {}
 
-    def _on_client_ws_msg(self, ws):
-        send_heart_beat_thread = threading.Thread(target=self._send_heart_beat_event)
-        send_heart_beat_thread.daemon = True
-        send_heart_beat_thread.start()
+            else:
+                self._send_ws_data(send_data)
+                # _logger.info("current printer info message: {}".format(send_data))
+            self.previous_dict = tmp_data
+        except Exception as e:
+            _logger.error("socket printer info error ...")
+            _logger.error(e)
 
-        send_printer_info_thread = threading.Thread(target=self._send_printer_info_event)
-        send_printer_info_thread.daemon = True
-        send_printer_info_thread.start()
+    def send_heartbeat(self):
+        try:
+            _logger.info("ping to raisecloud.")
+            self.websocket.send_text(data="ping", ping=True)
+        except Exception as e:
+            _logger.error("raisecloud ping error ...")
+            _logger.error(e)
 
     def _load_thread(self, download_url, filename):
         success_data = {

@@ -239,6 +239,9 @@ $(function() {
                 case "Logout":
                     self.showBind(true);
                     break;
+                case "Login":
+                    self.showBind(false);
+                    break;
                 default:
                     break;
             }
