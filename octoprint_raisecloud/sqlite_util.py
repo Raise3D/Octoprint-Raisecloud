@@ -1,4 +1,5 @@
 # coding=utf-8
+from __future__ import absolute_import, unicode_literals
 import sqlite3
 import os
 import logging
@@ -29,7 +30,7 @@ class SqliteServer(object):
             conn.text_factory = str
             if os.path.exists(self.path) and os.path.isfile(self.path):
                 return conn
-        except sqlite3.OperationalError, e:
+        except sqlite3.OperationalError as e:
             _logger.error("connect to sqlite error ...")
             raise e
 
@@ -45,7 +46,7 @@ class SqliteServer(object):
         try:
             cu.close()
             conn.close()
-        except sqlite3.OperationalError, e:
+        except sqlite3.OperationalError as e:
             _logger.error("close sqlite cur error ...")
             raise e
 

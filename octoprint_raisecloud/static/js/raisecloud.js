@@ -3,29 +3,17 @@ $(function() {
     var self = this;
     self.settings = parameters[0];
     self.loginState = parameters[1];
-    self.userName = ko.observable(""); //null while views are being rendered
+    self.userName = ko.observable("");
     self.groupName = ko.observable("");
     self.groupOwner = ko.observable("");
     self.showBind = ko.observable(true);
     self.showInput = ko.observable(false);
     self.fileName = ko.observable("");
-    //self.printer_name = ko.observable("raisecloud_variables.printer_name");
     self.printer_name = ko.observable("");
     self.disabled = ko.observable(true);
-    self.checked = ko.observable(false);
 
     self.turnRaise = function() {
       window.open("http://cloud.raise3d.com/raise3d.html");
-    };
-    // 弹框显示
-    self.turnPrivacy = function() {
-      $("#privacy_model").show();
-      $(".container_fluid").addClass("background");
-    };
-    //弹框隐藏
-    self.privacyCancel = function() {
-      $("#privacy_model").hide();
-      $(".container_fluid").removeClass("background");
     };
 
     self.uploadFile = function() {
@@ -38,7 +26,7 @@ $(function() {
         $("#bindPageMsg")
           new PNotify({
             title: gettext("RaiseCloud printer binding key error"),
-            text: gettext("Please upload the correct RaiseCloud printer binding key."),
+            text: gettext("Please upload the correct binding key file."),
             type: "error"
             });
         self.fileName("");
@@ -48,21 +36,13 @@ $(function() {
         self.disabled(false);
       }
     };
-
     // 开始绑定
     self.bind = function() {
-      if (!self.checked()) {
+      if (!self.fileName()) {
         $("#bindPageMsg")
           new PNotify({
           title: gettext("RaiseCloud login warning"),
-          text: gettext("Please agree to privacy policy and service agreement."),
-          type: "warning"
-          });
-      } else if (!self.fileName()) {
-        $("#bindPageMsg")
-          new PNotify({
-          title: gettext("RaiseCloud login warning"),
-          text: gettext("Please select RaiseCloud printer binding key."),
+          text: gettext("Please select a binding key file."),
           type: "warning"
           });
       } else {
@@ -82,12 +62,11 @@ $(function() {
               $("#bindPageMsg")
                 new PNotify({
                   title: gettext("RaiseCloud login failed"),
-                  text: gettext("Please check if your file is correct."),
+                  text: gettext("The key you upload is not correct or your team has disbanded and your key is invalid"),
                   type: "error"
                   });
             } else {
               self.showBind(false);
-              self.checked(false);
               self.fileName("");
               $("#fileUpload").val("");
               self.userName(data.user_name);
@@ -97,7 +76,7 @@ $(function() {
               $("#bindPageMsg")
                 new PNotify({
                   title: gettext("RaiseCloud Login successful"),
-                  text: gettext("You are now logged to RaiseCloud as" + self.userName()),
+                  text: gettext("The user has successfully logged in to RaiseCloud as" + self.userName()),
                   type: "success"
                   });
             }
@@ -107,7 +86,7 @@ $(function() {
             $("#bindPageMsg")
               new PNotify({
                   title: gettext("RaiseCloud login failed"),
-                  text: gettext("There was an error with your account, Please check if your file is correct."),
+                  text: gettext("Account error, please check if the binding key file is correct."),
                   type: "error"
                   });
           }
@@ -145,7 +124,7 @@ $(function() {
         $("#successPageMsg")
           new PNotify({
             title: gettext("Change printer name warning"),
-            text: gettext("Printer name cannot be empty."),
+            text: gettext("The printer name cannot be empty."),
             type: "warning"
             });
       } else {
@@ -163,7 +142,7 @@ $(function() {
               $("#successPageMsg")
                 new PNotify({
                   title: gettext("Change printer name failed"),
-                  text: gettext("Please change the printer name or try again."),
+                  text: gettext("Please modify the printer name or try again."),
                   type: "error"
                   });
             } else {
@@ -171,7 +150,7 @@ $(function() {
               self.printer_name($(".input").val());
               new PNotify({
                   title: gettext("Change printer name successful"),
-                  text: gettext("Printer name updated successfully in the RaiseCloud."),
+                  text: gettext("The printer name is updated to RaiseCloud successfully."),
                   type: "success"
                   });
             }
@@ -180,14 +159,13 @@ $(function() {
             $("#successPageMsg")
               new PNotify({
                   title: gettext("Change printer name failed"),
-                  text: gettext("Please change the printer name or try again."),
+                  text: gettext("Please modify the printer name or try again."),
                   type: "error"
                   });
           }
         });
       }
     };
-
     //unbind
     self.unbind = function() {
       console.log("unbind");
@@ -200,13 +178,12 @@ $(function() {
         dataType: "json",
         success: function(data) {
           if (data.status == "logout") {
-            self.checked(false);
             self.fileName("");
             $("#fileUpload").val("");
             self.showBind(true);
             new PNotify({
               title: gettext("RaiseCloud Logout successful"),
-              text: gettext("You are now logged out of RaiseCloud."),
+              text: gettext("You are logged out of RaiseCloud."),
               type: "success"
               });
 
@@ -216,7 +193,7 @@ $(function() {
             $("#successPageMsg")
             new PNotify({
               title: gettext("RaiseCloud Logout failed"),
-              text: gettext("There was an error logging out of RaiseCloud."),
+              text: gettext("Fail to Log out"),
               type: "error"
               });
           }
@@ -226,7 +203,7 @@ $(function() {
           $("#successPageMsg")
           new PNotify({
             title: gettext("RaiseCloud Logout failed"),
-            text: gettext("There was an error logging out of RaiseCloud."),
+            text: gettext("Fail to Log out"),
             type: "error"
             });
         }
@@ -236,11 +213,31 @@ $(function() {
     self.onDataUpdaterPluginMessage = function (plugin, message) {
         if (plugin == "RaiseCloud") {
             switch (message.event) {
-                case "Logout":
-                    self.showBind(true);
-                    break;
                 case "Login":
                     self.showBind(false);
+                    break;
+                case "Logout":
+                    new PNotify({
+                    title: gettext("RaiseCloud remote logout."),
+                    text: gettext(message.data),
+                    type: "success"
+                    });
+                    self.showBind(true);
+                    break;
+                case "ChangeName":
+                    self.printer_name(message.data);
+                    new PNotify({
+                    title: gettext("Change RaiseCloud printer name successful"),
+                    text: gettext("The printer name is modified successfully, and RaiseCloud will update the printer name synchronously."),
+                    type: "success"
+                    });
+                    break;
+                case "ChangeProfile":
+                    new PNotify({
+                    title: gettext("Change octoprint profile successful"),
+                    text: gettext("The printer profile modified successfully in RaiseCloud."),
+                    type: "success"
+                    });
                     break;
                 default:
                     break;

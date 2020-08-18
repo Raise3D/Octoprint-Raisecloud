@@ -1,4 +1,5 @@
 # coding=utf-8
+import ssl
 import logging
 import websocket
 _logger = logging.getLogger('octoprint.plugins.raisecloud')
@@ -12,9 +13,6 @@ class WebsocketServer(object):
         def on_message(ws, message):
             on_server_ws_msg(ws, message)
 
-        # def on_open(ws):
-        #     on_client_ws_msg(ws)
-
         def on_error(ws, error):
             _logger.error("websocket server error ...")
 
@@ -27,7 +25,7 @@ class WebsocketServer(object):
                                          on_error=on_error)
 
     def run(self):
-        self.ws.run_forever()
+        self.ws.run_forever(sslopt={"cert_reqs": ssl.CERT_NONE})
 
     def send_text(self, data, ping=False):
         import json

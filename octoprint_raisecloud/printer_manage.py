@@ -1,17 +1,21 @@
 # coding=utf-8
+from __future__ import absolute_import, unicode_literals
 import os
 import re
 import time
 import socket
 import requests
-import urlparse
+# Python2/3 compatiabile import
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 import tarfile
 import logging
 import psutil
 import octoprint.filemanager.util
 from octoprint.util import dict_merge
 from octoprint.printer.profile import InvalidProfileError, CouldNotOverwriteError, SaveError
-
 
 _logger = logging.getLogger('octoprint.plugins.raisecloud')
 
@@ -22,11 +26,8 @@ class PrinterInfo(object):
         self._settings = plugin.get_settings()
 
     @staticmethod
-    def unicode_2_hex_str(unicde_str):
-        if not isinstance(unicde_str, unicode):
-            unicde_str = unicode(unicde_str, "utf-8")
+    def hex_2_str(unicde_str):
         hex_str = ""
-
         for i in range(0, len(unicde_str)):
             hex_str += (hex(ord(unicde_str[i])).replace('0x', '').zfill(4))
         return hex_str.upper()
@@ -50,7 +51,7 @@ class PrinterInfo(object):
         try:
             state = self.plugin._printer.get_state_string()
             trans_state = "busy"  # 在连接中途匹配不到以下状态，故设置无法判断时为busy
-            if state == "Printing":
+            if state == "Printing" or "Printing from SD":
                 trans_state = "running"
             if state == "Paused":
                 trans_state = "paused"
@@ -89,7 +90,7 @@ class PrinterInfo(object):
             if data:
                 if "display" in data["job"]["file"]:  # display在打印机断开或没有加载时不存在
                     if data["job"]["file"]["display"]:
-                        job_info["print_file"] = self.unicode_2_hex_str(data["job"]["file"]["display"].encode('utf-8'))
+                        job_info["print_file"] = self.hex_2_str(data["job"]["file"]["display"])
                 if data["progress"]["completion"]:
                     job_info["print_progress"] = ('%.2f' % (int(data["progress"]["completion"])))
                 if data["progress"]["printTimeLeft"]:  # 如果存在printTimeLeft，则有printTime
@@ -185,7 +186,7 @@ class PrinterInfo(object):
         try:
             webcam_url = self._settings.global_get(["webcam", "stream"])
             if webcam_url:  # 判断webcam url 是否为Octopi 默认配置
-                tmp = urlparse.urlparse(webcam_url)
+                tmp = urlparse(webcam_url)
                 webcam["video_url"] = "http://" + self.get_ip_addr() + webcam_url if not tmp.scheme else webcam_url
                 webcam["cur_camera_state"] = "connected"
             return webcam
@@ -230,11 +231,30 @@ class PrinterInfo(object):
             _logger.error("get printer name error ...")
             return {"machine_name": ""}
 
+    def machine_type(self):
+        """
+        :return: {}
+        {"printer_type": "name-model"}
+        """
+        try:
+            machine_type = self._settings.get(["machine_type"])
+            return {"machine_type": machine_type}
+        except Exception as e:
+            _logger.error(e)
+            _logger.error("get printer type error ...")
+            return {"printer_type": ""}
+
+    @staticmethod
+    def merge_dicts(*dict_args):
+        result = {}
+        for dictionary in dict_args:
+            result.update(dictionary)
+        return result
+
     def get_printer_info(self):
-        return dict(self.printer_state().items() + self.job_file().items() +
-                    self.printer_temperature().items() + self.printer_profile().items() +
-                    self.printer_webcam().items() + self.printer_storage().items() +
-                    self.printer_name().items())
+        return self.merge_dicts(self.printer_state(), self.job_file(), self.printer_temperature(),
+                                self.printer_profile(), self.printer_webcam(),
+                                self.printer_storage(), self.printer_name(), self.machine_type())
 
 
 def get_cam_status(camera_url, snapshot_url):
@@ -245,6 +265,7 @@ def get_cam_status(camera_url, snapshot_url):
                 return True
         except:
             return False
+
 
 # singleton
 _instance = None
@@ -263,13 +284,16 @@ class PrinterManager(object):
         self.zip_url = os.path.join(self.plugin.get_plugin_data_folder(), "compress")
         self.unzip_url = os.path.join(self.plugin.get_plugin_data_folder(), "uncompress")
         self.downloading = False
-        self.delete_flag = False
         self.task_id = "not_remote_tasks"
+        self.cancel = False
+        self.manual = False
+        self.folder = "RaiseCloud-File"
 
     def change_printer_profile(self, new_profile):
         """
         new_profile = {
-                          "volume": {depth": 300}
+                          "volume": {depth": 300},
+                          "extruder": {'count': 1, 'nozzleDiameter': 0.66, 'offsets': [(0.0, 0.0)], 'sharedNozzle': False}
                       }
         """
         profile = self.plugin._printer_profile_manager.get_current_or_default()
@@ -283,7 +307,8 @@ class PrinterManager(object):
             _logger.error("Profile already exists and overwriting was not allowed")
             return False
         except Exception as e:
-            _logger.error("Could not save profile: %s" % str(e))
+            _logger.error("Could not save profile")
+            _logger.error(e)
             return False
         return True
 
@@ -309,9 +334,9 @@ class PrinterManager(object):
         file_sort_list = []
         for content_data in data["local"].values():
             detail = {
-                "file_type": "dir" if content_data["typePath"][0].encode('utf-8') == "folder" else "file",
-                "file_name": content_data["display"].encode('utf-8'),
-                "real_name": content_data["name"].encode('utf-8'),
+                "file_type": "dir" if content_data["typePath"][0] == "folder" else "file",
+                "file_name": content_data["display"],
+                "real_name": content_data["name"],
                 "last_modified_time": timestamp_2_str(content_data["date"]) if "date" in content_data else "",
                 "file_size": content_data["size"] if "size" in content_data else ""
             }
@@ -356,31 +381,46 @@ class PrinterManager(object):
         load_status = self.load_and_start(download_url, filename)
         if load_status:
             websocket.send_text(success_data)
-            _logger.info("start print file .")
+            _logger.info("send a print start message to cloud: {}".format(success_data))
         else:
             # 下载文件失败
-            websocket.send_text(failed_data)
-            _logger.info("download remote file error .")
+            if not self.manual:
+                websocket.send_text(failed_data)
+                _logger.info("send download remote file error message to cloud: {}".format(failed_data))
+            self.manual = False
             self.task_id = "not_remote_tasks"
+
+    def check_folder_exists(self, create=False):
+        raisecloud_folder = self.plugin._file_manager.path_on_disk("local", self.folder)
+        if not os.path.exists(raisecloud_folder):
+            if create:
+                self.plugin._file_manager.add_folder("local", self.folder)
+            return False
+        return True
 
     def load_and_start(self, download_url, filename):
         self.downloading = True
         try:
-            download_file_path = download_zip_file(download_url, self.zip_url, self.unzip_url)
+            download_file_path = self.download_zip_file(download_url, self.zip_url, self.unzip_url)
             self.downloading = False
             if download_file_path:
-                self.delete_flag = True
+                self.check_folder_exists(create=True)
                 file_object = octoprint.filemanager.util.DiskFileWrapper(filename=filename,
                                                                          path=download_file_path)
-                self.plugin._file_manager.add_file("local", filename, file_object,
-                                                   allow_overwrite=True)
+                canonPath, canonFilename = self.plugin._file_manager.canonicalize("local", filename)
+                futurePath = self.plugin._file_manager.sanitize_path("local", self.folder)  # uploads/Raisecloud-File
+                futureFilename = self.plugin._file_manager.sanitize_name("local", canonFilename)
+                futureFullPath = self.plugin._file_manager.join_path("local", futurePath,
+                                                                     futureFilename)  # uploads/Raisecloud-File/filename
+                futureFullPathInStorage = self.plugin._file_manager.path_in_storage("local",
+                                                                                    futureFullPath)  # Raisecloud-File/filename
 
-                canonPath, canonFilename = self.plugin._file_manager.canonicalize('local', filename,)
-                local_path = self.plugin._file_manager.sanitize_path("local", canonPath)  # local绝对路径
-                display_name = self.plugin._file_manager.sanitize_name("local", canonFilename)  # display name
+                added_file = self.plugin._file_manager.add_file("local", futureFullPathInStorage, file_object,
+                                                                allow_overwrite=True, display=canonFilename)
 
-                select_path = os.path.join(local_path, display_name)
-                self.plugin._printer.select_file(select_path, sd=False, printAfterSelect=True)
+                absFilename = self.plugin._file_manager.path_on_disk("local", added_file)
+                self.plugin._printer.select_file(absFilename, sd=False, printAfterSelect=True)
+
                 return True
             return False
         except Exception as e:
@@ -393,15 +433,116 @@ class PrinterManager(object):
             import shutil
             shutil.rmtree(self.unzip_url)
 
-    def clean_file(self, clean_file):
-        canonPath, canonFilename = self.plugin._file_manager.canonicalize('local', clean_file)
-        local_path = self.plugin._file_manager.sanitize_path("local", canonPath)  # local绝对路径
-        display_name = self.plugin._file_manager.sanitize_name("local", canonFilename)  # display name
-        select_path = os.path.join(local_path, display_name)
-        self.plugin._printer.unselect_file(select_path, sd=False, printAfterSelect=True)
-        self.plugin._file_manager.remove_file(destination="local", path=clean_file)
-        self.delete_flag = False
-        _logger.info("clean file %s success ..., " % clean_file)
+    def get_current_file(self):
+        current_job = self.plugin._printer.get_current_job()
+        if current_job is not None and "file" in current_job.keys() and "path" in current_job["file"] and "origin" in current_job["file"]:
+            return current_job["file"]["origin"], current_job["file"]["path"]
+        else:
+            return None, None
+
+    def is_busy(self, target, path):
+        currentOrigin, currentPath = self.get_current_file()
+        if currentPath is not None and currentOrigin == target and self.plugin._file_manager.file_in_path("local", path, currentPath) and (self.plugin._printer.is_printing() or self.plugin._printer.is_paused()):
+            return True
+
+        return any(target == x[0] and self.plugin._file_manager.file_in_path("local", path, x[1]) for x in self.plugin._file_manager.get_busy_files())
+
+    def clean_file(self):
+        # 文件不存在，不清理
+        if not self.check_folder_exists():
+            return
+        clean_folder = self.plugin._file_manager.sanitize_path('local', self.folder)  # uploads/Raisecloud-File
+        size = get_dir_size(clean_folder)
+        if size >= 500:  # 500M
+            data = self.plugin._file_manager.list_files(path=self.folder, filter=None, recursive=False)
+            if not data:
+                return
+            clean_file_name = None
+            key = data["local"].keys()[0]
+            last_print_time = data["local"][key]["history"][-1]["timestamp"] if "history" in data["local"][key] else \
+                data["local"][key]["date"]
+            for detail in data["local"].values():
+                tmp_time = detail["history"][-1]["timestamp"] if "history" in detail else detail["date"]
+                if tmp_time <= last_print_time:
+                    clean_file_name = detail["name"]
+                    last_print_time = tmp_time
+            clean_file = os.path.join(self.folder + "/{}".format(clean_file_name))
+            # clean_file = os.path.join("Raisecloud-File", clean_file_name)
+
+            if self.is_busy("local", clean_file):
+                _logger.info("Trying to delete a file that is currently in use: %s" % clean_file)
+                return
+            # deselect the file if it's currently selected
+            currentOrigin, currentPath = self.get_current_file()
+            if currentPath is not None and currentOrigin == "local" and clean_file == currentPath:
+                self.plugin._printer.unselect_file()
+            self.plugin._file_manager.remove_file("local", clean_file)
+            _logger.info("clean RaiseCloud file success.")
+
+    def download_zip_file(self, download_url, zip_url, unzip_url):
+        if not os.path.exists(unzip_url):
+            os.makedirs(unzip_url)
+        if not os.path.exists(zip_url):
+            os.makedirs(zip_url)
+        compress_path = os.path.join(zip_url, 'tmp.tar.gz')
+        gcode_name = ""
+
+        status = self.retry_download(3, download_url, compress_path)
+        self.cancel = False
+        if not status:
+            _logger.info("download file failed.")
+            return status
+        _logger.info("download file success. ")
+        try:
+            tar = tarfile.open(compress_path, "r:gz")
+            download_file_names = tar.getnames()
+            for value in download_file_names:
+                if str(value).endswith(".gcode"):
+                    gcode_name = str(value)
+            tar.extract(gcode_name, unzip_url)
+            tar.close()
+
+            download_path = os.path.join(unzip_url, gcode_name)
+            return download_path
+        except Exception as e:
+            _logger.error("tar file open error.")
+            _logger.error(e)
+            return False
+        finally:
+            # 清理压缩文件
+            os.remove(compress_path)
+
+    def retry_download(self, retry_times, download_url, compress_path):
+        # retry 上行retry消息
+        status = False
+        if self.cancel:
+            return False
+        while retry_times > 0:
+            status = self.retry(download_url, compress_path)
+            if status:
+                break
+            if self.cancel:
+                break
+            retry_times -= 1
+            _logger.info("an error occurred while downloading the file, retry download.")
+        return status
+
+    def retry(self, download_url, compress_path):
+        try:
+            r = requests.get(download_url, stream=True, timeout=(10.0, 60.0))
+            if r.status_code == 200:
+                with open(compress_path, "wb") as compress_file:
+                    for chunk in r.iter_content(chunk_size=100000):  # 100kb
+                        if self.cancel:
+                            # os.remove(compress_path)
+                            return False
+                        compress_file.write(chunk)
+            return True
+        except Exception as e:
+            _logger.info("download file from remote error.")
+            _logger.error(e)
+            # os.remove(compress_path)
+            return False
 
 
 def timestamp_2_str(timestamp):
@@ -412,57 +553,10 @@ def timestamp_2_str(timestamp):
         return ""
 
 
-def download_zip_file(download_url, zip_url, unzip_url):
-    if not os.path.exists(unzip_url):
-        os.makedirs(unzip_url)
-    if not os.path.exists(zip_url):
-        os.makedirs(zip_url)
-    compress_path = os.path.join(zip_url, 'tmp.tar.gz')
-    gcode_name = ""
-
-    status = retry_download(3, download_url, compress_path)
-    if not status:
-        return status
-    _logger.info("download file success. ")
-    try:
-        tar = tarfile.open(compress_path, "r:gz")
-        download_file_names = tar.getnames()
-        for value in download_file_names:
-            if str(value).endswith(".gcode"):
-                gcode_name = str(value)
-        tar.extract(gcode_name, unzip_url)
-        tar.close()
-
-        download_path = os.path.join(unzip_url, gcode_name)
-        return download_path
-    except Exception as e:
-        _logger.error("tar file open error.")
-        _logger.error(e)
-        return False
-    finally:
-        # 清理压缩文件
-        os.remove(compress_path)
-
-
-def retry_download(retry_times, download_url, compress_path):
-    status = False
-    while retry_times > 0:
-        status = retry(download_url, compress_path)
-        if status:
-            break
-        retry_times -= 1
-    return status
-
-
-def retry(download_url, compress_path):
-    try:
-        r = requests.get(download_url, stream=True, timeout=(10.0, 60.0))
-        if r.status_code == 200:
-            with open(compress_path, "wb") as compress_file:
-                for chunk in r.iter_content(chunk_size=100000):  # 100kb
-                    compress_file.write(chunk)
-        return True
-    except Exception as e:
-        _logger.info("retry download，status code {}, error: {}".format(r.status_code, e))
-        os.remove(compress_path)
-        return False
+def get_dir_size(folder):
+    import os
+    from os.path import join, getsize
+    size_long = 0
+    for root, dirs, files in os.walk(folder):
+        size_long += sum([getsize(join(root, name)) for name in files])
+    return size_long / 1024 / 1024  # MB
