@@ -68,7 +68,7 @@ class PrinterInfo(object):
             return {"cur_print_state": trans_state}
         except Exception as e:
             _logger.error(e)
-            _logger.error("get printer state error ...")
+            _logger.error("Get printer state error ...")
             return {"cur_print_state": "error"}
 
     def job_file(self):
@@ -99,7 +99,7 @@ class PrinterInfo(object):
             return job_info
         except Exception as e:
             _logger.error(e)
-            _logger.error("get printer job file error ...")
+            _logger.error("Get printer job error ...")
             return job_info
 
     def printer_temperature(self):
@@ -134,7 +134,7 @@ class PrinterInfo(object):
             return temperature_info
         except Exception as e:
             _logger.error(e)
-            _logger.error("get printer temperature error ...")
+            _logger.error("Get temperature error ...")
             return temperature_info
 
     def _profile(self):
@@ -164,7 +164,7 @@ class PrinterInfo(object):
             return volume_and_nozzle_info
         except Exception as e:
             _logger.error(e)
-            _logger.error("get printer profile error ...")
+            _logger.error("Get profile error ...")
             return volume_and_nozzle_info
 
     def printer_webcam(self):
@@ -192,7 +192,7 @@ class PrinterInfo(object):
             return webcam
         except Exception as e:
             _logger.error(e)
-            _logger.error("get printer webcam error ...")
+            _logger.error("Get webcam error ...")
             return webcam
 
     def printer_storage(self):
@@ -215,7 +215,7 @@ class PrinterInfo(object):
             return storage
         except Exception as e:
             _logger.error(e)
-            _logger.error("get printer storage error ...")
+            _logger.error("Get storage error ...")
             return storage
 
     def printer_name(self):
@@ -228,7 +228,7 @@ class PrinterInfo(object):
             return {"machine_name": printer_name}
         except Exception as e:
             _logger.error(e)
-            _logger.error("get printer name error ...")
+            _logger.error("Get printer name error ...")
             return {"machine_name": ""}
 
     def machine_type(self):
@@ -241,7 +241,7 @@ class PrinterInfo(object):
             return {"machine_type": machine_type}
         except Exception as e:
             _logger.error(e)
-            _logger.error("get printer type error ...")
+            _logger.error("Get printer type error ...")
             return {"printer_type": ""}
 
     @staticmethod
@@ -381,12 +381,12 @@ class PrinterManager(object):
         load_status = self.load_and_start(download_url, filename)
         if load_status:
             websocket.send_text(success_data)
-            _logger.info("send a print start message to cloud: {}".format(success_data))
+            # _logger.info("send a print start message to cloud: {}".format(success_data))
         else:
             # 下载文件失败
             if not self.manual:
                 websocket.send_text(failed_data)
-                _logger.info("send download remote file error message to cloud: {}".format(failed_data))
+                # _logger.info("send download remote file error message to cloud: {}".format(failed_data))
             self.manual = False
             self.task_id = "not_remote_tasks"
 
@@ -425,7 +425,7 @@ class PrinterManager(object):
             return False
         except Exception as e:
             self.downloading = False
-            _logger.error("load and select file for printing error ...")
+            _logger.error("Load and select file for printing error ...")
             _logger.error(e)
             return False
         finally:
@@ -477,7 +477,7 @@ class PrinterManager(object):
             if currentPath is not None and currentOrigin == "local" and clean_file == currentPath:
                 self.plugin._printer.unselect_file()
             self.plugin._file_manager.remove_file("local", clean_file)
-            _logger.info("clean RaiseCloud file success.")
+            _logger.info("Clean RaiseCloud file success.")
 
     def download_zip_file(self, download_url, zip_url, unzip_url):
         if not os.path.exists(unzip_url):
@@ -490,9 +490,9 @@ class PrinterManager(object):
         status = self.retry_download(3, download_url, compress_path)
         self.cancel = False
         if not status:
-            _logger.info("download file failed.")
+            _logger.info("Download file failed.")
             return status
-        _logger.info("download file success. ")
+        _logger.info("Download file success. ")
         try:
             tar = tarfile.open(compress_path, "r:gz")
             download_file_names = tar.getnames()
@@ -505,7 +505,7 @@ class PrinterManager(object):
             download_path = os.path.join(unzip_url, gcode_name)
             return download_path
         except Exception as e:
-            _logger.error("tar file open error.")
+            _logger.error("Open file error.")
             _logger.error(e)
             return False
         finally:
@@ -524,7 +524,7 @@ class PrinterManager(object):
             if self.cancel:
                 break
             retry_times -= 1
-            _logger.info("an error occurred while downloading the file, retry download.")
+            _logger.info("An error occurred, retry download.")
         return status
 
     def retry(self, download_url, compress_path):
@@ -539,7 +539,7 @@ class PrinterManager(object):
                         compress_file.write(chunk)
             return True
         except Exception as e:
-            _logger.info("download file from remote error.")
+            _logger.info("Download file from remote error.")
             _logger.error(e)
             # os.remove(compress_path)
             return False

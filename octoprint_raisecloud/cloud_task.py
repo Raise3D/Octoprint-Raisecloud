@@ -121,7 +121,7 @@ class CloudTask(object):
             }
         except Exception as e:
             _logger.error(e)
-            _logger.error("get printer info error ...")
+            _logger.error("Get printer info error ...")
 
     def on_event(self, state, continue_code="complete"):
         if state == 2:
@@ -137,7 +137,7 @@ class CloudTask(object):
                     "reboot": True}
             }
             self.websocket.send_text(reboot_data)
-            _logger.info("send reboot message to cloud {}".format(reboot_data))
+            # _logger.info("send reboot message to cloud {}".format(reboot_data))
             return
 
         if state == 1:
@@ -151,7 +151,7 @@ class CloudTask(object):
                     "left_time": 0}
             }
             self.websocket.send_text(process_data)
-            _logger.info("send complete process to cloud {}".format(process_data))
+            # _logger.info("send complete process to cloud {}".format(process_data))
         if self.printer_manager.task_id == "not_remote_tasks":
             return
         result = {
@@ -165,7 +165,7 @@ class CloudTask(object):
                 "machine_id": self._get_machine_id()["machine_id"],
             }
         }
-        _logger.info("send complete message to cloud {}".format(result))
+        # _logger.info("send complete message to cloud {}".format(result))
         self.websocket.send_text(result)
         # clean up task_id
         self.printer_manager.task_id = "not_remote_tasks"
@@ -174,7 +174,7 @@ class CloudTask(object):
         try:
             self.event_loop()
         except Exception as e:
-            _logger.error("task event error...")
+            _logger.error("Task event error...")
             _logger.error(e)
 
     def resolve_addr(self, domain):
@@ -186,7 +186,7 @@ class CloudTask(object):
         policy = ReconnectionPolicy()
 
         while True:
-            _logger.info("websocket connecting ...")
+            _logger.info("Raisecloud connecting ...")
             try:
                 addr = "wss://api.raise3d.com/octoprod-v1.1/websocket"
                 self.websocket = WebsocketServer(url=addr,
@@ -199,7 +199,7 @@ class CloudTask(object):
                 while self.websocket.connected():
                     status = self.sqlite_server.check_login_status()
                     if status == "logout":
-                        _logger.info("user has logged out, raisecloud ws is about to disconnect ...")
+                        _logger.info("User quit, Raisecloud will disconnect ...")
                         break
 
                     if time.time() - last_heartbeat > 60:
@@ -213,7 +213,7 @@ class CloudTask(object):
             finally:
                 try:
                     self.websocket.disconnect()
-                    _logger.info("come into finally , current ws status: {}".format(self.websocket.connected()))
+                    # _logger.info("come into finally , current ws status: {}".format(self.websocket.connected()))
                     if self.sqlite_server.check_login_status() == "logout":
                         break
                 except:
@@ -244,23 +244,23 @@ class CloudTask(object):
                     if "cur_print_state" not in send_data["data"].keys():
                         send_data["data"]["cur_print_state"] = tmp_data["cur_print_state"]
                     self._send_ws_data(send_data)
-                    _logger.info("current printer info message: {}".format(send_data))
+                    # _logger.info("current printer info message: {}".format(send_data))
                     self.diff_dict = {}
 
             else:
                 self._send_ws_data(send_data)
-                _logger.info("current printer info message: {}".format(send_data))
+                # _logger.info("current printer info message: {}".format(send_data))
             self.previous_dict = tmp_data
         except Exception as e:
-            _logger.error("socket printer info error ...")
+            # _logger.error("socket printer info error ...")
             _logger.error(e)
 
     def send_heartbeat(self):
         try:
-            _logger.info("ping to raisecloud.")
+            # _logger.info("ping to raisecloud.")
             self.websocket.send_text(data="ping", ping=True)
         except Exception as e:
-            _logger.error("raisecloud ping error ...")
+            # _logger.error("Raisecloud ping error ...")
             _logger.error(e)
 
     def _load_thread(self, download_url, filename):
@@ -292,7 +292,7 @@ class CloudTask(object):
 
     def _on_server_ws_msg(self, ws, message):
         # 处理远程消息
-        _logger.info("receive message from raisecloud: %s" % message)
+        # _logger.info("receive message from raisecloud: %s" % message)
         mes = json.loads(message)
         if mes["message_type"] == 2:
             try:
@@ -307,7 +307,7 @@ class CloudTask(object):
                     filename = hex_2_str(mes["data"]["print_file"])  # display name
                     self._load_thread(download_url, filename)
             except Exception as e:
-                _logger.error("cloud file printing error ...")
+                _logger.error("Raisecloud file printing error ...")
                 _logger.error(e)
 
         if mes["message_type"] == 4:
@@ -330,10 +330,10 @@ class CloudTask(object):
                         "machine_id": self._get_machine_id()["machine_id"]
                     }
                 }
-                _logger.info("send {} message to cloud: {}".format(command, result))
+                # _logger.info("send {} message to cloud: {}".format(command, result))
                 self.websocket.send_text(result)
             except Exception as e:
-                _logger.error("printer setting push down error ...")
+                _logger.error("Raisecloud setting push down error ...")
                 _logger.error(e)
 
         if mes["message_type"] == 5:
@@ -399,10 +399,10 @@ class CloudTask(object):
                         "machine_id": self._get_machine_id()["machine_id"],
                     }
                 }
-                _logger.info("send printer setting message to cloud: {}".format(result))
+                # _logger.info("send printer setting message to cloud: {}".format(result))
                 self.websocket.send_text(result)
             except Exception as e:
-                _logger.error("printer setting error,")
+                _logger.error("Raisecloud setting error...")
                 _logger.error(e)
 
         if mes["message_type"] == 6:
@@ -422,10 +422,10 @@ class CloudTask(object):
                     "token": self._get_token()["token"],
                     "data": file_data
                 }
-                _logger.info("send file data message to cloud: {}".format(result))
+                # _logger.info("send file data message to cloud: {}".format(result))
                 self.websocket.send_text(result)
             except Exception as e:
-                _logger.error("get file data error ...")
+                _logger.error("Raiseclud get file data error ...")
                 _logger.error(e)
 
         if mes["message_type"] == 7:
@@ -446,11 +446,11 @@ class CloudTask(object):
                             "machine_id": self._get_machine_id()["machine_id"]
                         }
                     }
-                    _logger.info("send print local file message to the cloud: {}".format(result))
+                    # _logger.info("send print local file message to the cloud: {}".format(result))
                     self.websocket.send_text(result)
 
                 except Exception as e:
-                    _logger.error("start print local file error ...")
+                    _logger.error("Raisecloud print local file error ...")
                     _logger.error(e)
 
         if mes["message_type"] == 8:
@@ -468,11 +468,11 @@ class CloudTask(object):
                     }
                 }
 
-                _logger.info("send accept job message to cloud: {}".format(reply_message))
+                # _logger.info("send accept job message to cloud: {}".format(reply_message))
                 self.websocket.send_text(reply_message)
 
             except Exception as e:
-                _logger.error("set accept or refuse job error ...")
+                _logger.error("Raisecloud set receive job error ...")
                 _logger.error(e)
 
         if mes["message_type"] == 9:
@@ -495,17 +495,17 @@ class CloudTask(object):
                         }
                     }
                     self.websocket.send_text(reply_data)
-                    _logger.info("Remote cancel downloading file.")
+                    _logger.info("Raiselcoud cancel downloading file.")
                     # 刷新消息
                     send_data = self._get_send_data()
                     self._send_ws_data(send_data)
-                    _logger.info("cancel download and send all data: {}".format(send_data))
+                    # _logger.info("cancel download and send all data: {}".format(send_data))
 
                 else:
                     _logger.info("Ineffective operation, no file is downloading.")
 
             except Exception as e:
-                _logger.error("Remote cancel downloading file error ...")
+                _logger.error("Raisecloud cancel downloading file error ...")
                 _logger.error(e)
 
         if mes["message_type"] == 10:
@@ -517,7 +517,7 @@ class CloudTask(object):
                 error_code = int(mes["data"]["error_code"])
                 if error_code == 2:
                     # 刷新token
-                    _logger.info("remotely force users to flash token .")
+                    # _logger.info("remotely force users to flash token .")
                     token = self.flash_token(machine_id=self._get_machine_id()["machine_id"])
                     # 写入token
                     if token:
@@ -527,7 +527,7 @@ class CloudTask(object):
                     send_data["token"] = token
                     send_data["data"]["token"] = token
                     self._send_ws_data(send_data)
-                    _logger.info("flask token and send all data: {}".format(send_data))
+                    # _logger.info("flask token and send all data: {}".format(send_data))
 
                 else:
                     # 强制下线, 正常解绑或者团队解散用户删除解绑
@@ -610,7 +610,7 @@ class CloudTask(object):
                 }
             }
 
-            _logger.info("notify start print local file: {}".format(notify_data))
+            # _logger.info("notify start print local file: {}".format(notify_data))
             self.websocket.send_text(notify_data)
 
 

@@ -72,7 +72,6 @@ class RaisecloudPlugin(octoprint.plugin.StartupPlugin,
         if event == Events.FIRMWARE_DATA:
             if "MACHINE_TYPE" in payload["data"]:
                 machine_type = payload["data"]["MACHINE_TYPE"]
-                self._logger.info("get printer types: {}".format(machine_type))
                 self._settings.set(['machine_type'], machine_type)
                 self._settings.save()
 
@@ -91,7 +90,7 @@ class RaisecloudPlugin(octoprint.plugin.StartupPlugin,
 
         if event == Events.CONNECTED:
             # reboot消息
-            self._logger.info("notify remote reboot ...")
+            # self._logger.info("notify remote reboot ...")
             self.cloud_task.on_event(state=2)
 
         if event == Events.PRINTER_STATE_CHANGED:
@@ -119,7 +118,7 @@ class RaisecloudPlugin(octoprint.plugin.StartupPlugin,
     def ws_alive(self):
         if hasattr(self.main_thread, 'isAlive'):
             status = self.main_thread.isAlive()
-            self._logger.info("Websocket isAlive : (%s)" % status)
+            # self._logger.info("Websocket isAlive : (%s)" % status)
             return status
         return False
 
@@ -170,7 +169,7 @@ class RaisecloudPlugin(octoprint.plugin.StartupPlugin,
     @octoprint.plugin.BlueprintPlugin.route("/status", methods=["GET"])
     @admin_permission.require(403)
     def login_status(self):
-        self._logger.info("user current status %s" % self.status)
+        # self._logger.info("user current status %s" % self.status)
         if self.status == "login":
             res = self.sqlite_server.get_current_info()
             if res:

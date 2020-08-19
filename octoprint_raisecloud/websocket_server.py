@@ -14,10 +14,11 @@ class WebsocketServer(object):
             on_server_ws_msg(ws, message)
 
         def on_error(ws, error):
-            _logger.error("websocket server error ...")
+            _logger.error("Raisecloud route error ...")
+            _logger.error(error)
 
         def on_close(ws):
-            _logger.info("websocket closed ...")
+            _logger.info("Raisecloud route closed ...")
 
         self.ws = websocket.WebSocketApp(url=url,
                                          on_message=on_message,

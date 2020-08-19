@@ -80,6 +80,7 @@ class Util(object):
             return "", ""
         except Exception as e:
             _logger.error(e)
+            _logger.error("Get access key error...")
             return "", ""
 
 

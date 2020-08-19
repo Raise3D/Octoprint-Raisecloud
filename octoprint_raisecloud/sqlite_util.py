@@ -31,7 +31,7 @@ class SqliteServer(object):
             if os.path.exists(self.path) and os.path.isfile(self.path):
                 return conn
         except sqlite3.OperationalError as e:
-            _logger.error("connect to sqlite error ...")
+            _logger.error("Connect to sqlite error ...")
             raise e
 
     def get_cursor(self, conn):
@@ -47,7 +47,7 @@ class SqliteServer(object):
             cu.close()
             conn.close()
         except sqlite3.OperationalError as e:
-            _logger.error("close sqlite cur error ...")
+            _logger.error("Close sqlite cur error ...")
             raise e
 
     def exec_sql(self, sql):
@@ -59,7 +59,7 @@ class SqliteServer(object):
             conn.commit()
             self.close_all(conn, cu)
         else:
-            _logger.error('exec sql [{}] error!'.format(sql))
+            _logger.error('Exec sql [{}] error!'.format(sql))
 
     def create_table(self, sql):
         # 创建数据库表
@@ -70,7 +70,7 @@ class SqliteServer(object):
             conn.commit()
             self.close_all(conn, cu)
         except sqlite3.Error as e:
-            _logger.error('create table [{}] error!'.format(sql))
+            _logger.error('Create table [{}] error!'.format(sql))
             raise e
 
     def drop_table(self, table):
@@ -81,11 +81,11 @@ class SqliteServer(object):
             cu = self.get_cursor(conn)
             cu.execute(sql)
             conn.commit()
-            _logger.info('drop [{}] table success'.format(table))
+            _logger.info('Drop [{}] table success'.format(table))
             cu.close()
             conn.close()
         except sqlite3.Error:
-            _logger.error('drop table [{}] error'.format(table))
+            _logger.error('Drop table [{}] error'.format(table))
 
     def insert(self, sql, data):
         # 插入数据
@@ -98,7 +98,7 @@ class SqliteServer(object):
                     conn.commit()
                 self.close_all(conn, cu)
         except sqlite3.Error:
-            _logger.error('insert [{}] wrong!'.format(sql))
+            _logger.error('Insert [{}] wrong!'.format(sql))
 
     def fetchall(self, sql):
         # 查询所有数据
@@ -111,7 +111,7 @@ class SqliteServer(object):
                 return r
             self.close_all(conn, cu)
         except sqlite3.Error as e:
-            _logger.error('fetchall [{}] error!'.format(sql))
+            _logger.error('Fetchall [{}] error!'.format(sql))
             _logger.error(e)
             return None
 
@@ -128,7 +128,7 @@ class SqliteServer(object):
                     return r[0]
                 self.close_all(conn, cu)
         except sqlite3.Error as e:
-            _logger.error('fetchone [{}] error!'.format(sql))
+            _logger.error('Fetchone [{}] error!'.format(sql))
             _logger.error(e)
             return None
 
@@ -143,7 +143,7 @@ class SqliteServer(object):
                     conn.commit()
                 self.close_all(conn, cu)
         except sqlite3.Error as e:
-            _logger.error('update [{}] error!'.format(sql))
+            _logger.error('Update [{}] error!'.format(sql))
             _logger.error(e)
 
     def delete(self, sql, data):
@@ -157,7 +157,7 @@ class SqliteServer(object):
                     conn.commit()
                 self.close_all(conn, cu)
         except sqlite3.Error as e:
-            _logger.error('delete [{}] error!'.format(sql))
+            _logger.error('Delete [{}] error!'.format(sql))
             _logger.error(e)
 
     def init_db(self):
@@ -178,7 +178,7 @@ class SqliteServer(object):
         try:
             self.create_table(create_tb_sql)
         except sqlite3.Warning as e:
-            _logger.error('delete [{}] error!'.format(create_tb_sql))
+            _logger.error('Delete [{}] error!'.format(create_tb_sql))
             raise e
 
     def check_user_status(self, user_name):
