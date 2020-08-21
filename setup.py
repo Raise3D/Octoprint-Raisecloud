@@ -11,11 +11,11 @@ plugin_package = "octoprint_raisecloud"
 plugin_name = "RaiseCloud"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "1.0.2"
+plugin_version = "1.1.0"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
-plugin_description = "A plugin connected to the RaiseCloud"
+plugin_description = "Connect your OctoPrint-enabled 3D Printer to the RaiseCloud platform."
 
 # The plugin's author. Can be overwritten within OctoPrint's internal data via __plugin_author__ in the plugin module
 plugin_author = "carl_zhang"
