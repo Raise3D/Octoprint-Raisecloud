@@ -188,7 +188,7 @@ class CloudTask(object):
         while True:
             _logger.info("Raisecloud connecting ...")
             try:
-                addr = "wss://api.raise3d.com/octoprod-v1.1/websocket"
+                addr = "wss://{}/octoprod-v1.1/websocket".format(self.resolve_addr("api.raise3d.com"))
                 self.websocket = WebsocketServer(url=addr,
                                                  on_server_ws_msg=self._on_server_ws_msg)
                 wst = threading.Thread(target=self.websocket.run)
