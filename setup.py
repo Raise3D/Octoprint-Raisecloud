@@ -30,7 +30,7 @@ plugin_url = "https://github.com/Raise3D/Octoprint-Raisecloud"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ['pycrypto', 'requests_toolbelt==0.8.0', 'Pillow']
+plugin_requires = ['pycrypto', 'requests_toolbelt==1.0.0', 'Pillow']
 
 # Additional package data to install for this plugin. The subfolders "templates", "static" and "translations" will
 # already be installed automatically if they exist. Note that if you add something here you'll also need to update
